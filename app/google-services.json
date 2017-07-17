@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "594157985734",
+    "firebase_url": "https://kpg-ukraine.firebaseio.com",
+    "project_id": "kpg-ukraine",
+    "storage_bucket": "kpg-ukraine.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594157985734:android:30bb2c2d346da996",
+        "android_client_info": {
+          "package_name": "com.example.android.kpgukraine"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "594157985734-6r3lojct990fviittmp42nb90eo9u4td.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.kpgukraine",
+            "certificate_hash": "b99b23e74e8fffc592114d89ea348bb489c0c976"
+          }
+        },
+        {
+          "client_id": "594157985734-2u3851rv5f0ns6ute6r75h3cfvjv7s68.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoXPZGLzwmokjFPX4tooNZNgTjmzEaNII"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "594157985734-2u3851rv5f0ns6ute6r75h3cfvjv7s68.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

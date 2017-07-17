@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:id="@+id/group1" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_news"
+            android:icon="@drawable/ic_menu_send"
+            android:title="@string/nav_news" />
+        <item
+            android:id="@+id/nav_business"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/nav_business" />
+        <item
+            android:id="@+id/nav_posters"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="@string/nav_posters" />
+        <item
+            android:id="@+id/nav_adv"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/nav_advertisement" />
+        <item
+            android:id="@+id/nav_wether"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/nav_wether" />
+    </group>
+
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/nav_auth"
+            android:icon="@drawable/ic_menu_send"
+            android:title="@string/nav_authorization" />
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/ic_menu_share"
+            android:title="@string/nav_about" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/nav_settings" />
+    </group>
+</menu>
+
+    <!--   -->
