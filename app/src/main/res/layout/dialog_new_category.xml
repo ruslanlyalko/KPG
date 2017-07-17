@@ -4,52 +4,34 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-<!--
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_margin="16dp"
-            android:src="@drawable/ic_menu_send" />
--->
+        android:layout_height="wrap_content">
+
         <EditText
             android:id="@+id/text_title1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:hint="@string/hint_category_name"
             android:inputType="text" />
+    </android.support.design.widget.TextInputLayout>
 
-    </LinearLayout>
 
-
-    <LinearLayout
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-        <!--
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_margin="16dp"
-                    android:src="@drawable/ic_menu_send" />
-        -->
+        android:layout_height="wrap_content">
+
         <EditText
             android:id="@+id/text_uri"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:hint="@string/hint_category_uri"
             android:inputType="text" />
-
-    </LinearLayout>
-
+    </android.support.design.widget.TextInputLayout>
 
 </LinearLayout>

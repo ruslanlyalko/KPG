@@ -48,6 +48,10 @@
             android:name=".SubcategoryActivity"
             android:parentActivityName=".MainActivity"></activity>
         <activity
+            android:name=".ObjectsActivity"
+            android:parentActivityName=".SubcategoryActivity"></activity>
+
+        <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
             android:parentActivityName=".MainActivity"

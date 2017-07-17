@@ -27,7 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.android.kpgukraine.utils.Category;
+import com.example.android.kpgukraine.models.Category;
 import com.example.android.kpgukraine.utils.CategoryAdapter;
 import com.example.android.kpgukraine.utils.Const;
 import com.facebook.login.LoginManager;

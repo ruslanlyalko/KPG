@@ -3,6 +3,7 @@ package com.example.android.kpgukraine.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -15,7 +16,10 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.android.kpgukraine.ObjectsActivity;
 import com.example.android.kpgukraine.R;
+import com.example.android.kpgukraine.models.Category;
+import com.example.android.kpgukraine.models.SubCategory;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -120,17 +124,15 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                         subCategory.title = inputTitle1.getText().toString();
                         subCategory.imageUri = inputUri.getText().toString();
                         String oldCategoryKey = subCategory.categoryKey;
-                        subCategory.categoryTitle = spinnerCategory.getSelectedItem().toString();
+                        String categoryTitle = spinnerCategory.getSelectedItem().toString();
 
                         for (int i = 0; i < categoryList.size(); i++) {
 
-                            if (categoryList.get(i).title.equals(subCategory.categoryTitle))
+                            if (categoryList.get(i).title.equals(categoryTitle))
                                 subCategory.categoryKey = categoryList.get(i).key;
-
                         }
 
                         updateNewCategoryToDB(subCategory, position, oldCategoryKey);
-
                     }
                 });
 
@@ -157,7 +159,12 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
         holder.panelItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO Load Object
+                Intent intent = new Intent(mContext, ObjectsActivity.class);
+                intent.putExtra(Const.EXTRA_SUB_CAT_KEY, subCategory.getKey());
+                intent.putExtra(Const.EXTRA_SUB_CAT_TITLE, subCategory.getTitle());
+                intent.putExtra(Const.EXTRA_IS_ADMIN, isAdmin);
+
+                mContext.startActivity(intent);
             }
         });
 
@@ -229,14 +236,15 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
      */
     private void updateNewCategoryToDB(final SubCategory subCategory, final int position, final String oldCategoryKey) {
         if (!oldCategoryKey.equals(subCategory.categoryKey)) {
+            /*
             database.getReference(Const.DB_REF_CATEGORIES)
                     .child(oldCategoryKey)
-                    .child(subCategory.key).removeValue();
+                    .child(subCategory.key).removeValue();*/
             subCategoryList.remove(position);
             notifyItemRemoved(position);
         }
 
-        database.getReference(Const.DB_REF_CATEGORIES).child(subCategory.categoryKey).child(subCategory.key)
+        database.getReference(Const.DB_REF_SUBCATEGORIES).child(subCategory.key)
                 .setValue(subCategory).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

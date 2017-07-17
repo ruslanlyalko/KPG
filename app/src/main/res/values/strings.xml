@@ -62,6 +62,15 @@
     <string name="toast_restore_pass_uns">Email введено невірно</string>
     <string name="dialog_subcategory_title">Введіть дані підкатегорії</string>
     <string name="hint_subcategory_name">Назва підкатегорії</string>
+    <string name="dialog_object_title">Введіть дані обєкта</string>
+    <string name="hint_name">Назва</string>
+    <string name="hint_description">Опис</string>
+    <string name="hint_address">Адрес</string>
+    <string name="hint_dinnre">Обід</string>
+    <string name="hint_phone">Телефон</string>
+    <string name="hint_time">Час роботи</string>
+    <string name="hint_latitude">Latitude</string>
+    <string name="hint_longilatitude">Longitude</string>
 
     // Activity
     // Activity

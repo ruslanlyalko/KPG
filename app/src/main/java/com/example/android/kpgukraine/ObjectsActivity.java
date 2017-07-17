@@ -15,9 +15,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.example.android.kpgukraine.models.ObjectModel;
 import com.example.android.kpgukraine.utils.Const;
-import com.example.android.kpgukraine.models.SubCategory;
-import com.example.android.kpgukraine.utils.SubCategoryAdapter;
+import com.example.android.kpgukraine.utils.ObjectAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,35 +30,37 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubcategoryActivity extends AppCompatActivity {
+public class ObjectsActivity extends AppCompatActivity {
 
     //views
     FloatingActionButton fab;
     RecyclerView recyclerViewCategory;
 
     // Global variables
-    private SubCategoryAdapter adapter;
-    private List<SubCategory> subCategoryList = new ArrayList<>();
+    private ObjectAdapter adapter;
+    private List<ObjectModel> objectModelList = new ArrayList<>();
     private boolean isAdmin = false;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseAuth auth = FirebaseAuth.getInstance();
 
     // variables
-    String categoryKey, categoryTitle;
+    String subCategoryKey, subCategoryTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_subcategory);
+        setContentView(R.layout.activity_objects);
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            categoryKey = bundle.getString(Const.EXTRA_CAT_KEY);
-            categoryTitle = bundle.getString(Const.EXTRA_CAT_TITLE);
+
+            subCategoryKey = bundle.getString(Const.EXTRA_SUB_CAT_KEY);
+            subCategoryTitle = bundle.getString(Const.EXTRA_SUB_CAT_TITLE);
+
             isAdmin = bundle.getBoolean(Const.EXTRA_IS_ADMIN);
         }
 
-        setTitle(categoryTitle);
+        setTitle(subCategoryTitle);
 
         initRef();
 
@@ -66,50 +68,66 @@ public class SubcategoryActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addNewSubCategory();
+                addNewObject();
             }
         });
 
-        adapter = new SubCategoryAdapter(this, subCategoryList, isAdmin);
+        adapter = new ObjectAdapter(this, objectModelList, isAdmin);
         recyclerViewCategory.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewCategory.setItemAnimator(new DefaultItemAnimator());
         recyclerViewCategory.setAdapter(adapter);
 
-        loadSubCategoriesFromDB();
+
+        loadObjectsFromDB();
 
     }
 
     /**
      * Add new Category
      */
-    private void addNewSubCategory() {
+    private void addNewObject() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.dialog_subcategory_title);
+        builder.setTitle(R.string.dialog_object_title);
 
 
-        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_new_subcategory, null, false);
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_new_object, null, false);
         builder.setView(viewInflated);
-        final EditText inputTitle1 = (EditText) viewInflated.findViewById(R.id.text_title1);
-        final EditText inputUri = (EditText) viewInflated.findViewById(R.id.text_uri);
+
+        final EditText editTitle = (EditText) viewInflated.findViewById(R.id.edit_title);
+        final EditText editDescription = (EditText) viewInflated.findViewById(R.id.edit_description);
+        final EditText editAddress = (EditText) viewInflated.findViewById(R.id.edit_address);
+        final EditText editDinner = (EditText) viewInflated.findViewById(R.id.edit_dinner);
+        final EditText editPhone = (EditText) viewInflated.findViewById(R.id.edit_phone);
+        final EditText editTime = (EditText) viewInflated.findViewById(R.id.edit_time);
+        final EditText editUri = (EditText) viewInflated.findViewById(R.id.edit_uri);
+        final EditText editLatitude = (EditText) viewInflated.findViewById(R.id.edit_latitude);
+        final EditText editLongitude = (EditText) viewInflated.findViewById(R.id.edit_longitude);
+
+
+        // todo add new inputs for location and time opened
+
         final Spinner spinnerCategory = (Spinner) viewInflated.findViewById(R.id.spinner_category);
-
         spinnerCategory.setVisibility(View.GONE);
-        /*
-        String [] arraySpinner = new String[] {subCategoryTitle};
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, arraySpinner);
-        spinnerCategory.setAdapter(adapter);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        */
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                String title1 = inputTitle1.getText().toString();
-                String uri = inputUri.getText().toString();
+                String title1 = editTitle.getText().toString();
+                String description = editDescription.getText().toString();
+                String address = editAddress.getText().toString();
+                String dinner = editDinner.getText().toString();
+                String phone = editPhone.getText().toString();
+                String time = editTime.getText().toString();
+                String image = editUri.getText().toString();
+                String latitude = editLatitude.getText().toString();
+                String longitude = editLongitude.getText().toString();
 
-                addNewSubCategoryToDB(title1, uri);
+                ObjectModel newObject = new ObjectModel(subCategoryKey, title1, description, address,
+                        dinner, phone, time, image, latitude, longitude);
+
+                addNewObjectToDB(newObject);
 
             }
         });
@@ -127,12 +145,14 @@ public class SubcategoryActivity extends AppCompatActivity {
     /**
      * Save new category to db
      */
-    private void addNewSubCategoryToDB(String title1, String uri) {
-        DatabaseReference subcategoriesRef = database.getReference(Const.DB_REF_SUBCATEGORIES);
+    private void addNewObjectToDB(ObjectModel objectModel) {
+        DatabaseReference objectsRef = database.getReference(Const.DB_REF_OBJECTS);
 
-        String key1 = subcategoriesRef.push().getKey();
+        String objectKey = objectsRef.push().getKey();
 
-        subcategoriesRef.child(key1).setValue(new SubCategory(key1, title1, uri, categoryKey))
+        objectModel.setKey(objectKey);
+
+        objectsRef.child(objectKey).setValue(objectModel)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -145,23 +165,23 @@ public class SubcategoryActivity extends AppCompatActivity {
     /**
      * Load all Categories from Firebase DB
      */
-    private void loadSubCategoriesFromDB() {
+    private void loadObjectsFromDB() {
 
-        subCategoryList.clear();
+        objectModelList.clear();
         adapter.notifyDataSetChanged();
 
-        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_SUBCATEGORIES);
+        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_OBJECTS);
 
         categoriesRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                SubCategory subCategory = dataSnapshot.getValue(SubCategory.class);
+                ObjectModel objectModel = dataSnapshot.getValue(ObjectModel.class);
 
-                // load subcategories only for current category
-                if (subCategory != null && subCategory.getCategoryKey().equals(categoryKey)) {
-                    subCategoryList.add(subCategory);
+                if (objectModel.subCategoryKey.equals(subCategoryKey)) {
+                    objectModelList.add(objectModel);
                     adapter.notifyDataSetChanged();
                 }
+
             }
 
             @Override
@@ -186,7 +206,6 @@ public class SubcategoryActivity extends AppCompatActivity {
         });
 
     }
-
 
 
     /**
