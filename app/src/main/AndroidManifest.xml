@@ -45,12 +45,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SubcategoryActivity"
+            android:name=".CategoryActivity"
             android:parentActivityName=".MainActivity"></activity>
         <activity
-            android:name=".ObjectsActivity"
-            android:parentActivityName=".SubcategoryActivity"></activity>
-
+            android:name=".SubCategoryActivity"
+            android:parentActivityName=".CategoryActivity"></activity>
+        <activity
+            android:name=".ObjectActivity"
+            android:parentActivityName=".SubCategoryActivity"></activity>
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"

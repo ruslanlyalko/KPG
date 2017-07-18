@@ -9,4 +9,8 @@
     <dimen name="list_item_height">56dp</dimen>
     <dimen name="image_height">48dp</dimen>
     <dimen name="text_category_size">18sp</dimen>
+    <dimen name="card_margin">2dp</dimen>
+    <dimen name="card_album_radius">2dp</dimen>
+    <dimen name="album_cover_height">160dp</dimen>
+    <dimen name="album_title_padding">16dp</dimen>
 </resources>

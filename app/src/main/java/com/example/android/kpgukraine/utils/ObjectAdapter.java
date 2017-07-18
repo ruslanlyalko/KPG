@@ -3,6 +3,8 @@ package com.example.android.kpgukraine.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -11,13 +13,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.android.kpgukraine.ObjectActivity;
 import com.example.android.kpgukraine.R;
 import com.example.android.kpgukraine.models.ObjectModel;
 import com.example.android.kpgukraine.models.SubCategory;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,6 +32,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,17 +46,23 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     private FirebaseAuth auth = FirebaseAuth.getInstance();
     private List<SubCategory> subCategoryList = new ArrayList<>();
     private boolean isAdmin;
+    private FirebaseStorage storage = FirebaseStorage.getInstance();
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView textTitle;
+        public TextView textTitle, textAddress, textPhone;
         public RelativeLayout panelItem;
+        public ImageView image;
 
 
         public MyViewHolder(View view) {
             super(view);
-            textTitle = (TextView) view.findViewById(R.id.text_title);
             panelItem = (RelativeLayout) view.findViewById(R.id.panel_item);
-            // TODO InitRef
+            textTitle = (TextView) view.findViewById(R.id.text_title);
+            textAddress = (TextView) view.findViewById(R.id.text_address);
+            textPhone = (TextView) view.findViewById(R.id.text_phone);
+            image = (ImageView) view.findViewById(R.id.image);
+
+            // todo add other fields
         }
 
 
@@ -74,7 +88,38 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     public void onBindViewHolder(final ObjectAdapter.MyViewHolder holder, final int position) {
         final ObjectModel objectModel = objectModelList.get(position);
 
+        if (objectModel.imageUri != null && !objectModel.imageUri.isEmpty()) {
+            if (objectModel.imageUri.contains("http")) {
+                // set image from URL provided by user
+                Glide.with(mContext).load(objectModel.imageUri).into(holder.image);
+
+            } else {
+                final StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(objectModel.imageUri);
+
+                // check if image is exist on Storage, otherwise load default image
+                ref.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Uri> task) {
+                        if (task.isSuccessful()) {
+                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+                        } else {
+                            StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(Const.DEF_IMAGE);
+                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+                        }
+                    }
+                });
+            }
+
+        } else {
+            //set default image if user dn't enter any link
+            StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(Const.DEF_IMAGE);
+            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+        }
+
+
         holder.textTitle.setText(objectModel.title);
+        holder.textAddress.setText(objectModel.address);
+        holder.textPhone.setText(objectModel.phone);
 
         holder.panelItem.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -193,6 +238,14 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
             @Override
             public void onClick(View v) {
                 // TODO Load Object
+                Intent intent = new Intent(mContext, ObjectActivity.class);
+                intent.putExtra(Const.EXTRA_SUB_CAT_KEY, objectModel.getKey());
+                intent.putExtra(Const.EXTRA_SUB_CAT_TITLE, objectModel.getTitle());
+                intent.putExtra(Const.EXTRA_IS_ADMIN, isAdmin);
+
+                mContext.startActivity(intent);
+
+
             }
         });
 
@@ -265,7 +318,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
      * @param moved
      */
     private void updateNewCategoryToDB(final ObjectModel objectModel, final int position, final boolean moved) {
-         if(moved){
+        if (moved) {
             // todo update any other references to this object
             objectModelList.remove(position);
             notifyItemRemoved(position);

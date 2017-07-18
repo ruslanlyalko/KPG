@@ -71,6 +71,10 @@
     <string name="hint_time">Час роботи</string>
     <string name="hint_latitude">Latitude</string>
     <string name="hint_longilatitude">Longitude</string>
+    <string name="dialog_event_title">Введіть дані події</string>
+    <string name="hint_event_name">Назва події</string>
+    <string name="action_call">ПОДЗВОНИТИ</string>
+    <string name="hint_object_uri">"URL or File Name in /OBJECT-IMAGES/"</string>
 
     // Activity
     // Activity

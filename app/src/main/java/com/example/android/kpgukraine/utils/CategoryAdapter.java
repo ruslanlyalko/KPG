@@ -15,7 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.android.kpgukraine.R;
-import com.example.android.kpgukraine.SubcategoryActivity;
+import com.example.android.kpgukraine.CategoryActivity;
 import com.example.android.kpgukraine.models.Category;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -123,7 +123,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
         holder.panelItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(mContext, SubcategoryActivity.class);
+                Intent intent = new Intent(mContext, CategoryActivity.class);
                 intent.putExtra(Const.EXTRA_CAT_KEY, category.key);
                 intent.putExtra(Const.EXTRA_CAT_TITLE, category.getTitle());
                 intent.putExtra(Const.EXTRA_IS_ADMIN, isAdmin);

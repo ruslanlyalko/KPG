@@ -1,27 +1,24 @@
 package com.example.android.kpgukraine;
 
 import android.content.DialogInterface;
-import android.content.res.Resources;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.example.android.kpgukraine.models.EventModel;
 import com.example.android.kpgukraine.models.ObjectModel;
 import com.example.android.kpgukraine.utils.Const;
-import com.example.android.kpgukraine.utils.ObjectAdapter;
+import com.example.android.kpgukraine.utils.EventAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,37 +31,37 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubCategoryActivity extends AppCompatActivity {
+public class ObjectActivity extends AppCompatActivity {
 
     //views
     FloatingActionButton fab;
     RecyclerView recyclerViewCategory;
 
     // Global variables
-    private ObjectAdapter adapter;
-    private List<ObjectModel> objectModelList = new ArrayList<>();
+    private EventAdapter adapter;
+    private List<EventModel> eventModelList = new ArrayList<>();
     private boolean isAdmin = false;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseAuth auth = FirebaseAuth.getInstance();
 
     // variables
-    String subCategoryKey, subCategoryTitle;
+    String objectKey, objectTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_subcategory);
+        setContentView(R.layout.activity_object);
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
 
-            subCategoryKey = bundle.getString(Const.EXTRA_SUB_CAT_KEY);
-            subCategoryTitle = bundle.getString(Const.EXTRA_SUB_CAT_TITLE);
+            objectKey = bundle.getString(Const.EXTRA_SUB_CAT_KEY);
+            objectTitle = bundle.getString(Const.EXTRA_SUB_CAT_TITLE);
 
             isAdmin = bundle.getBoolean(Const.EXTRA_IS_ADMIN);
         }
 
-        setTitle(subCategoryTitle);
+        setTitle(objectTitle);
 
         initRef();
 
@@ -72,89 +69,31 @@ public class SubCategoryActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addNewObject();
+                addNewEvent();
             }
         });
 
-        adapter = new ObjectAdapter(this, objectModelList, isAdmin);
-
-        recyclerViewCategory.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(10), true));
-
-        recyclerViewCategory.setLayoutManager(new GridLayoutManager(this, 1));
+        adapter = new EventAdapter(this, eventModelList, isAdmin);
+        recyclerViewCategory.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewCategory.setItemAnimator(new DefaultItemAnimator());
         recyclerViewCategory.setAdapter(adapter);
 
-
-        loadObjectsFromDB();
-
-    }
-    /**
-     * RecyclerView item decoration - give equal margin around grid item
-     */
-    public class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
-
-        private int spanCount;
-        private int spacing;
-        private boolean includeEdge;
-
-        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
-            this.spanCount = spanCount;
-            this.spacing = spacing;
-            this.includeEdge = includeEdge;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-            int position = parent.getChildAdapterPosition(view); // item position
-            int column = position % spanCount; // item column
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount; // spacing - column * ((1f / spanCount) * spacing)
-                outRect.right = (column + 1) * spacing / spanCount; // (column + 1) * ((1f / spanCount) * spacing)
-
-                if (position < spanCount) { // top edge
-                    outRect.top = spacing;
-                }
-                outRect.bottom = spacing; // item bottom
-            } else {
-                outRect.left = column * spacing / spanCount; // column * ((1f / spanCount) * spacing)
-                outRect.right = spacing - (column + 1) * spacing / spanCount; // spacing - (column + 1) * ((1f /    spanCount) * spacing)
-                if (position >= spanCount) {
-                    outRect.top = spacing; // item top
-                }
-            }
-        }
-
+        loadEventsFromDB();
     }
 
-    /**
-     * Converting dp to pixel
-     */
-    private int dpToPx(int dp) {
-        Resources r = getResources();
-        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
-    }
-    /**
-     * Add new Category
-     */
-    private void addNewObject() {
+
+    private void addNewEvent() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.dialog_object_title);
+        builder.setTitle(R.string.dialog_event_title);
 
 
-        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_new_object, null, false);
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_new_event, null, false);
         builder.setView(viewInflated);
 
         final EditText editTitle = (EditText) viewInflated.findViewById(R.id.edit_title);
         final EditText editDescription = (EditText) viewInflated.findViewById(R.id.edit_description);
-        final EditText editAddress = (EditText) viewInflated.findViewById(R.id.edit_address);
-        final EditText editDinner = (EditText) viewInflated.findViewById(R.id.edit_dinner);
-        final EditText editPhone = (EditText) viewInflated.findViewById(R.id.edit_phone);
-        final EditText editTime = (EditText) viewInflated.findViewById(R.id.edit_time);
-        final EditText editUri = (EditText) viewInflated.findViewById(R.id.edit_uri);
-        final EditText editLatitude = (EditText) viewInflated.findViewById(R.id.edit_latitude);
-        final EditText editLongitude = (EditText) viewInflated.findViewById(R.id.edit_longitude);
+
 
 
         // todo add new inputs for location and time opened
@@ -168,18 +107,11 @@ public class SubCategoryActivity extends AppCompatActivity {
 
                 String title1 = editTitle.getText().toString();
                 String description = editDescription.getText().toString();
-                String address = editAddress.getText().toString();
-                String dinner = editDinner.getText().toString();
-                String phone = editPhone.getText().toString();
-                String time = editTime.getText().toString();
-                String image = editUri.getText().toString();
-                String latitude = editLatitude.getText().toString();
-                String longitude = editLongitude.getText().toString();
 
-                ObjectModel newObject = new ObjectModel(subCategoryKey, title1, description, address,
-                        dinner, phone, time, image, latitude, longitude);
 
-                addNewObjectToDB(newObject);
+                EventModel newObject = new EventModel(objectKey, title1, description);
+
+                addNewEventToDB(newObject);
 
             }
         });
@@ -197,14 +129,14 @@ public class SubCategoryActivity extends AppCompatActivity {
     /**
      * Save new category to db
      */
-    private void addNewObjectToDB(ObjectModel objectModel) {
-        DatabaseReference objectsRef = database.getReference(Const.DB_REF_OBJECTS);
+    private void addNewEventToDB(EventModel eventModel) {
+        DatabaseReference objectsRef = database.getReference(Const.DB_REF_EVENTS);
 
         String objectKey = objectsRef.push().getKey();
 
-        objectModel.setKey(objectKey);
+        eventModel.setKey(objectKey);
 
-        objectsRef.child(objectKey).setValue(objectModel)
+        objectsRef.child(objectKey).setValue(eventModel)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -214,23 +146,21 @@ public class SubCategoryActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * Load all Categories from Firebase DB
-     */
-    private void loadObjectsFromDB() {
 
-        objectModelList.clear();
+    private void loadEventsFromDB() {
+
+        eventModelList.clear();
         adapter.notifyDataSetChanged();
 
-        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_OBJECTS);
+        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_EVENTS);
 
         categoriesRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                ObjectModel objectModel = dataSnapshot.getValue(ObjectModel.class);
+                EventModel eventModel = dataSnapshot.getValue(EventModel.class);
 
-                if (objectModel.subCategoryKey.equals(subCategoryKey)) {
-                    objectModelList.add(objectModel);
+                if (eventModel.objectKey.equals(objectKey)) {
+                    eventModelList.add(eventModel);
                     adapter.notifyDataSetChanged();
                 }
 

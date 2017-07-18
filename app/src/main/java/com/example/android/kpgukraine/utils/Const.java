@@ -17,4 +17,6 @@ public final class Const {
     public static final String EXTRA_CAT_TITLE = "extra_cat_title";
     public static final String EXTRA_SUB_CAT_KEY = "extra_sub_cat_key";
     public static final String EXTRA_SUB_CAT_TITLE = "extra_sub_cat_title";
+    public static final String STORE_OBJECT_IMAGES = "OBJECT-IMAGES";
+    public static final String DEF_IMAGE = "default.png";
 }

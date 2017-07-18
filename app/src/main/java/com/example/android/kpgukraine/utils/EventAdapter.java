@@ -3,7 +3,6 @@ package com.example.android.kpgukraine.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -16,10 +15,9 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.android.kpgukraine.SubCategoryActivity;
 import com.example.android.kpgukraine.R;
-import com.example.android.kpgukraine.models.Category;
-import com.example.android.kpgukraine.models.SubCategory;
+import com.example.android.kpgukraine.models.EventModel;
+import com.example.android.kpgukraine.models.ObjectModel;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,13 +30,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.MyViewHolder> {
+public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder> {
     private Context mContext;
-    private List<SubCategory> subCategoryList;
+    private List<EventModel> eventModelList;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private FirebaseAuth auth = FirebaseAuth.getInstance();
-    private List<Category> categoryList = new ArrayList<>();
+    private List<ObjectModel> objectModelList = new ArrayList<>();
     private boolean isAdmin;
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -56,27 +54,27 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
     }
 
-    public SubCategoryAdapter(Context mContext, List<SubCategory> subCategoryList, boolean isAdmin) {
+    public EventAdapter(Context mContext, List<EventModel> eventModelList, boolean isAdmin) {
         this.mContext = mContext;
-        this.subCategoryList = subCategoryList;
+        this.eventModelList = eventModelList;
         this.isAdmin = isAdmin;
 
-        loadCategoriesFromDB();
+        loadObjectsFromDB();
     }
 
     @Override
-    public SubCategoryAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public EventAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.category_card, parent, false);
+                .inflate(R.layout.event_card, parent, false);
 
-        return new SubCategoryAdapter.MyViewHolder(itemView);
+        return new EventAdapter.MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(final SubCategoryAdapter.MyViewHolder holder, final int position) {
-        final SubCategory subCategory = subCategoryList.get(position);
+    public void onBindViewHolder(final EventAdapter.MyViewHolder holder, final int position) {
+        final EventModel eventModel = eventModelList.get(position);
 
-        holder.textTitle.setText(subCategory.title);
+        holder.textTitle.setText(eventModel.title);
 
         holder.panelItem.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -85,25 +83,26 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                 //return false;
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                builder.setTitle(R.string.dialog_subcategory_title);
+                builder.setTitle(R.string.dialog_object_title);
 
 
-                View viewInflated = LayoutInflater.from(mContext).inflate(R.layout.dialog_new_subcategory, null, false);
+                View viewInflated = LayoutInflater.from(mContext).inflate(R.layout.dialog_new_event, null, false);
                 builder.setView(viewInflated);
-                final EditText inputTitle1 = (EditText) viewInflated.findViewById(R.id.text_title1);
-                final EditText inputUri = (EditText) viewInflated.findViewById(R.id.text_uri);
+
+                final EditText editTitle = (EditText) viewInflated.findViewById(R.id.edit_title);
+                final EditText editDescription = (EditText) viewInflated.findViewById(R.id.edit_description);
+
                 final Spinner spinnerCategory = (Spinner) viewInflated.findViewById(R.id.spinner_category);
 
-                String[] arraySpinner = new String[categoryList.size()];
+                String[] arraySpinner = new String[objectModelList.size()];
 
                 int pos = 0;
-                for (int i = 0; i < categoryList.size(); i++) {
-                    arraySpinner[i] = categoryList.get(i).title;
+                for (int i = 0; i < objectModelList.size(); i++) {
+                    arraySpinner[i] = objectModelList.get(i).getTitle();
 
-                    if (categoryList.get(i).key.equals(subCategory.categoryKey))
+                    if (objectModelList.get(i).getKey().equals(eventModel.getObjectKey()))
                         pos = i;
                 }
-
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
                         android.R.layout.simple_spinner_item, arraySpinner);
 
@@ -111,28 +110,36 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
                 spinnerCategory.setAdapter(adapter);
                 spinnerCategory.setSelection(pos);
-
-
                 //init
-                inputTitle1.setText(subCategory.title);
-                inputUri.setText(subCategory.imageUri);
+                editTitle.setText(eventModel.getTitle());
+                editDescription.setText(eventModel.getDescription());
+
 
                 builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        subCategory.title = inputTitle1.getText().toString();
-                        subCategory.imageUri = inputUri.getText().toString();
-                        String oldCategoryKey = subCategory.categoryKey;
-                        String categoryTitle = spinnerCategory.getSelectedItem().toString();
+                        String title1 = editTitle.getText().toString();
+                        String description = editDescription.getText().toString();
 
-                        for (int i = 0; i < categoryList.size(); i++) {
 
-                            if (categoryList.get(i).title.equals(categoryTitle))
-                                subCategory.categoryKey = categoryList.get(i).key;
+                        eventModel.setTitle(title1);
+                        eventModel.setDescription(description);
+
+                        String oldParentKey = eventModel.getObjectKey();
+                        String subCategoryTitle = spinnerCategory.getSelectedItem().toString();
+
+                        // check if
+                        for (int i = 0; i < objectModelList.size(); i++) {
+
+                            if (objectModelList.get(i).getTitle().equals(subCategoryTitle))
+                                eventModel.objectKey = objectModelList.get(i).getKey();
                         }
 
-                        updateNewCategoryToDB(subCategory, position, oldCategoryKey);
+                        boolean moved = !oldParentKey.equals(eventModel.objectKey);
+
+                        updateEventToDB(eventModel, position, moved);
+
                     }
                 });
 
@@ -146,7 +153,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                 builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        removeSubCategory(subCategory, position);
+                        removeEvent(eventModel, position);
 
                     }
                 });
@@ -159,32 +166,26 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
         holder.panelItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(mContext, SubCategoryActivity.class);
-                intent.putExtra(Const.EXTRA_SUB_CAT_KEY, subCategory.getKey());
-                intent.putExtra(Const.EXTRA_SUB_CAT_TITLE, subCategory.getTitle());
-                intent.putExtra(Const.EXTRA_IS_ADMIN, isAdmin);
-
-                mContext.startActivity(intent);
+                // TODO Load Object
             }
         });
 
     }
 
-    /**
-     * Load all Categories from Firebase DB
-     * Listening for any new added categories
-     */
-    private void loadCategoriesFromDB() {
 
-        categoryList.clear();
+    private void loadObjectsFromDB() {
 
-        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_CATEGORIES);
+        objectModelList.clear();
+
+        DatabaseReference categoriesRef = database.getReference(Const.DB_REF_OBJECTS);
 
         categoriesRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Category category = dataSnapshot.getValue(Category.class);
-                categoryList.add(category);
+
+                ObjectModel objectModel = dataSnapshot.getValue(ObjectModel.class);
+
+                objectModelList.add(objectModel);
             }
 
             @Override
@@ -215,14 +216,13 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
      *
      * @param position
      */
-    private void removeSubCategory(SubCategory subCategory, final int position) {
+    private void removeEvent(EventModel eventModel, final int position) {
 
-        database.getReference(Const.DB_REF_CATEGORIES)
-                .child(subCategory.categoryKey)
-                .child(subCategory.key).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+        database.getReference(Const.DB_REF_EVENTS)
+                .child(eventModel.key).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                subCategoryList.remove(position);
+                eventModelList.remove(position);
                 notifyItemRemoved(position);
             }
         });
@@ -231,24 +231,23 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
     /**
      * Update value in DB
      *
-     * @param subCategory
-     * @param oldCategoryKey
+     * @param eventModel
+     * @param position
+     * @param moved
      */
-    private void updateNewCategoryToDB(final SubCategory subCategory, final int position, final String oldCategoryKey) {
-        if (!oldCategoryKey.equals(subCategory.categoryKey)) {
-            /*
-            database.getReference(Const.DB_REF_CATEGORIES)
-                    .child(oldCategoryKey)
-                    .child(subCategory.key).removeValue();*/
-            subCategoryList.remove(position);
+    private void updateEventToDB(final EventModel eventModel, final int position, final boolean moved) {
+         if(moved){
+            // todo update any other references to this object
+            eventModelList.remove(position);
             notifyItemRemoved(position);
         }
 
-        database.getReference(Const.DB_REF_SUBCATEGORIES).child(subCategory.key)
-                .setValue(subCategory).addOnCompleteListener(new OnCompleteListener<Void>() {
+        database.getReference(Const.DB_REF_EVENTS)
+                .child(eventModel.key)
+                .setValue(eventModel).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if (oldCategoryKey.equals(subCategory.categoryKey))
+                if (!moved)
                     notifyItemChanged(position);
             }
         });
@@ -256,7 +255,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
     @Override
     public int getItemCount() {
-        return subCategoryList.size();
+        return eventModelList.size();
     }
 
 
