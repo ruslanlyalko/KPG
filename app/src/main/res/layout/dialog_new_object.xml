@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="16dp"
                 android:layout_marginRight="16dp"
-                android:hint="@string/hint_dinnre"
+                android:hint="@string/hint_dinner"
                 android:inputType="text" />
 
         </android.support.design.widget.TextInputLayout>
@@ -147,7 +147,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="16dp"
                 android:layout_marginRight="16dp"
-                android:hint="@string/hint_longilatitude"
+                android:hint="@string/hint_longitude"
                 android:inputType="text|numberDecimal" />
         </android.support.design.widget.TextInputLayout>
 

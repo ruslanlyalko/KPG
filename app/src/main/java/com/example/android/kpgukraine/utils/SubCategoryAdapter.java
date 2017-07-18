@@ -16,13 +16,12 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.android.kpgukraine.SubCategoryActivity;
 import com.example.android.kpgukraine.R;
+import com.example.android.kpgukraine.SubCategoryActivity;
 import com.example.android.kpgukraine.models.Category;
 import com.example.android.kpgukraine.models.SubCategory;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -37,23 +36,20 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
     private List<SubCategory> subCategoryList;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private FirebaseAuth auth = FirebaseAuth.getInstance();
     private List<Category> categoryList = new ArrayList<>();
     private boolean isAdmin;
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView textTitle;
-        public RelativeLayout panelItem;
+
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView textTitle;
+        RelativeLayout panelItem;
 
 
-        public MyViewHolder(View view) {
+        MyViewHolder(View view) {
             super(view);
             textTitle = (TextView) view.findViewById(R.id.text_title);
             panelItem = (RelativeLayout) view.findViewById(R.id.panel_item);
-            // TODO InitRef
         }
-
-
     }
 
     public SubCategoryAdapter(Context mContext, List<SubCategory> subCategoryList, boolean isAdmin) {
@@ -67,15 +63,15 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
     @Override
     public SubCategoryAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.category_card, parent, false);
+                .inflate(R.layout.card_category, parent, false);
 
         return new SubCategoryAdapter.MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(final SubCategoryAdapter.MyViewHolder holder, final int position) {
+    public void onBindViewHolder(final SubCategoryAdapter.MyViewHolder holder, int position) {
         final SubCategory subCategory = subCategoryList.get(position);
-
+        final int positionFinal = position;
         holder.textTitle.setText(subCategory.title);
 
         holder.panelItem.setOnLongClickListener(new View.OnLongClickListener() {
@@ -104,7 +100,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                         pos = i;
                 }
 
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(mContext,
                         android.R.layout.simple_spinner_item, arraySpinner);
 
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -132,7 +128,9 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                                 subCategory.categoryKey = categoryList.get(i).key;
                         }
 
-                        updateNewCategoryToDB(subCategory, position, oldCategoryKey);
+                        boolean moved = !oldCategoryKey.equals(subCategory.categoryKey);
+
+                        updateNewCategoryToDB(subCategory, positionFinal, moved);
                     }
                 });
 
@@ -146,7 +144,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                 builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        removeSubCategory(subCategory, position);
+                        removeSubCategory(subCategory, positionFinal);
 
                     }
                 });
@@ -213,7 +211,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
     /**
      * Remove from DB
      *
-     * @param position
+     * @param position in adapter
      */
     private void removeSubCategory(SubCategory subCategory, final int position) {
 
@@ -231,15 +229,12 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
     /**
      * Update value in DB
      *
-     * @param subCategory
-     * @param oldCategoryKey
+     * @param subCategory model that we want to store
+     * @param moved move
      */
-    private void updateNewCategoryToDB(final SubCategory subCategory, final int position, final String oldCategoryKey) {
-        if (!oldCategoryKey.equals(subCategory.categoryKey)) {
-            /*
-            database.getReference(Const.DB_REF_CATEGORIES)
-                    .child(oldCategoryKey)
-                    .child(subCategory.key).removeValue();*/
+    private void updateNewCategoryToDB(final SubCategory subCategory, final int position, final boolean moved) {
+        if (moved) {
+
             subCategoryList.remove(position);
             notifyItemRemoved(position);
         }
@@ -248,7 +243,7 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
                 .setValue(subCategory).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if (oldCategoryKey.equals(subCategory.categoryKey))
+                if (!moved)
                     notifyItemChanged(position);
             }
         });

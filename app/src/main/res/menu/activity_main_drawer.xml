@@ -21,7 +21,7 @@
         <item
             android:id="@+id/nav_wether"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="@string/nav_wether" />
+            android:title="@string/nav_weather" />
     </group>
 
     <group android:id="@+id/group2">

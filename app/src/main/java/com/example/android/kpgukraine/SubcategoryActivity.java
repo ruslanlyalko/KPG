@@ -1,5 +1,8 @@
 package com.example.android.kpgukraine;
 
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Rect;
@@ -10,10 +13,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -24,7 +28,6 @@ import com.example.android.kpgukraine.utils.Const;
 import com.example.android.kpgukraine.utils.ObjectAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -45,7 +48,6 @@ public class SubCategoryActivity extends AppCompatActivity {
     private List<ObjectModel> objectModelList = new ArrayList<>();
     private boolean isAdmin = false;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-    FirebaseAuth auth = FirebaseAuth.getInstance();
 
     // variables
     String subCategoryKey, subCategoryTitle;
@@ -88,16 +90,17 @@ public class SubCategoryActivity extends AppCompatActivity {
         loadObjectsFromDB();
 
     }
+
     /**
      * RecyclerView item decoration - give equal margin around grid item
      */
-    public class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
+    private class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
 
         private int spanCount;
         private int spacing;
         private boolean includeEdge;
 
-        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
+        GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
             this.spanCount = spanCount;
             this.spacing = spacing;
             this.includeEdge = includeEdge;
@@ -134,6 +137,7 @@ public class SubCategoryActivity extends AppCompatActivity {
         Resources r = getResources();
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
     }
+
     /**
      * Add new Category
      */
@@ -155,9 +159,6 @@ public class SubCategoryActivity extends AppCompatActivity {
         final EditText editUri = (EditText) viewInflated.findViewById(R.id.edit_uri);
         final EditText editLatitude = (EditText) viewInflated.findViewById(R.id.edit_latitude);
         final EditText editLongitude = (EditText) viewInflated.findViewById(R.id.edit_longitude);
-
-
-        // todo add new inputs for location and time opened
 
         final Spinner spinnerCategory = (Spinner) viewInflated.findViewById(R.id.spinner_category);
         spinnerCategory.setVisibility(View.GONE);
@@ -229,7 +230,7 @@ public class SubCategoryActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 ObjectModel objectModel = dataSnapshot.getValue(ObjectModel.class);
 
-                if (objectModel.subCategoryKey.equals(subCategoryKey)) {
+                if (objectModel != null && objectModel.subCategoryKey.equals(subCategoryKey)) {
                     objectModelList.add(objectModel);
                     adapter.notifyDataSetChanged();
                 }
@@ -259,6 +260,31 @@ public class SubCategoryActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final MenuItem searchMenuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchMenuItem.getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(
+                new ComponentName(getApplicationContext(), SearchResultActivity.class)));
+        searchView.setSubmitButtonEnabled(true);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchMenuItem.collapseActionView();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        return true;
+    }
 
     /**
      * Initialize all views references

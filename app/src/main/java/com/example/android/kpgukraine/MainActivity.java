@@ -1,5 +1,8 @@
 package com.example.android.kpgukraine;
 
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -61,12 +65,12 @@ public class MainActivity extends AppCompatActivity
     // Global variables
     private CategoryAdapter adapter;
     private List<Category> categoryList = new ArrayList<>();
+
     private boolean isAdmin = false;
     private boolean isModerator = false;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private FirebaseAuth auth = FirebaseAuth.getInstance();
     private boolean doubleBackToExitPressedOnce;
-    private Menu menu;
     private String PERSISTENCE_ENABLED = "persistence_enabled";
     private FirebaseRemoteConfig mRemoteConfig = FirebaseRemoteConfig.getInstance();
 
@@ -81,7 +85,6 @@ public class MainActivity extends AppCompatActivity
         Boolean persistence = false;
         if (savedInstanceState != null) {
             persistence = savedInstanceState.getBoolean(PERSISTENCE_ENABLED);
-
         }
         // Enable persistence if it's still not enabled
         if (!persistence)
@@ -105,17 +108,16 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        adapter = new CategoryAdapter(this, categoryList, isAdmin || isModerator);
-        recyclerViewCategory.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewCategory.setItemAnimator(new DefaultItemAnimator());
-        recyclerViewCategory.setAdapter(adapter);
 
+        initRecyclerAdapter();
 
         // load List of Categories and display it on UI
         loadCategoriesFromDB();
 
         // need to be called after init adapter
         initRemoteConfig();
+
+        setTitle(R.string.nav_business);
     }
 
     private void initRemoteConfig() {
@@ -145,10 +147,10 @@ public class MainActivity extends AppCompatActivity
 
             String email = auth.getCurrentUser().getEmail();
 
-            isAdmin = mRemoteConfig.getString("admin_emails").contains(email);
-
-            isModerator = mRemoteConfig.getString("moderator_emails").contains(email);
-
+            if (email != null) {
+                isAdmin = mRemoteConfig.getString("admin_emails").contains(email);
+                isModerator = mRemoteConfig.getString("moderator_emails").contains(email);
+            }
         } else {
             isAdmin = false;
             isModerator = false;
@@ -282,7 +284,6 @@ public class MainActivity extends AppCompatActivity
 
             if (doubleBackToExitPressedOnce) {
                 super.onBackPressed();
-                // TODO close application completely
                 int pid = android.os.Process.myPid();
                 android.os.Process.killProcess(pid);
                 return;
@@ -306,9 +307,29 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        // this.menu = menu;
+
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final MenuItem searchMenuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchMenuItem.getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(
+                new ComponentName(getApplicationContext(), SearchResultActivity.class)));
+        searchView.setSubmitButtonEnabled(true);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                searchMenuItem.collapseActionView();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                return false;
+            }
+        });
         return true;
     }
 
@@ -320,16 +341,28 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_search) {
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+
+    private void initRecyclerAdapter() {
+        if (adapter == null)
+            adapter = new CategoryAdapter(this, categoryList, isAdmin || isModerator);
+
+        recyclerViewCategory.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewCategory.setItemAnimator(new DefaultItemAnimator());
+        recyclerViewCategory.setAdapter(adapter);
+    }
+
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -346,11 +379,10 @@ public class MainActivity extends AppCompatActivity
             setTitle(R.string.nav_advertisement);
 
         } else if (id == R.id.nav_wether) {
-            setTitle(R.string.nav_wether);
+            setTitle(R.string.nav_weather);
 
         } else if (id == R.id.nav_auth) {
             if (auth.getCurrentUser() != null) {
-                //todo dialog
                 android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(MainActivity.this);
                 builder.setTitle(R.string.dialog_logout_title)
                         .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -407,7 +439,7 @@ public class MainActivity extends AppCompatActivity
         if (user != null) {
 
 
-            navAuth.setTitle(R.string.nav_authorization_lgout);
+            navAuth.setTitle(R.string.nav_authorization_logout);
 
             textUserEmail.setText(user.getEmail());
             textUserName.setText(user.getDisplayName());

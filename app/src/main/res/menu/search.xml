@@ -11,5 +11,7 @@
         kpgukraine:actionViewClass="android.support.v7.widget.SearchView"
         android:icon="@drawable/ic_search"
         android:title="Search"
-        kpgukraine:showAsAction="ifRoom|collapseActionView"/>
+        kpgukraine:showAsAction="always"/>
+    <!-- |collapseActionView|ifRoom"-->
+
 </menu>

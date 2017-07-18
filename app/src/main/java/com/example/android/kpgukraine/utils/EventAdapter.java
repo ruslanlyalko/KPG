@@ -20,7 +20,6 @@ import com.example.android.kpgukraine.models.EventModel;
 import com.example.android.kpgukraine.models.ObjectModel;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -35,20 +34,18 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
     private List<EventModel> eventModelList;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private FirebaseAuth auth = FirebaseAuth.getInstance();
     private List<ObjectModel> objectModelList = new ArrayList<>();
     private boolean isAdmin;
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView textTitle;
-        public RelativeLayout panelItem;
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView textTitle;
+        RelativeLayout panelItem;
 
 
-        public MyViewHolder(View view) {
+        MyViewHolder(View view) {
             super(view);
             textTitle = (TextView) view.findViewById(R.id.text_title);
             panelItem = (RelativeLayout) view.findViewById(R.id.panel_item);
-            // TODO InitRef
         }
 
 
@@ -65,14 +62,15 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
     @Override
     public EventAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.event_card, parent, false);
+                .inflate(R.layout.card_event, parent, false);
 
         return new EventAdapter.MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(final EventAdapter.MyViewHolder holder, final int position) {
+    public void onBindViewHolder(final EventAdapter.MyViewHolder holder, int position) {
         final EventModel eventModel = eventModelList.get(position);
+        final int positionFinal = position;
 
         holder.textTitle.setText(eventModel.title);
 
@@ -103,7 +101,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
                     if (objectModelList.get(i).getKey().equals(eventModel.getObjectKey()))
                         pos = i;
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(mContext,
                         android.R.layout.simple_spinner_item, arraySpinner);
 
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -138,7 +136,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
 
                         boolean moved = !oldParentKey.equals(eventModel.objectKey);
 
-                        updateEventToDB(eventModel, position, moved);
+                        updateEventToDB(eventModel, positionFinal, moved);
 
                     }
                 });
@@ -153,7 +151,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
                 builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        removeEvent(eventModel, position);
+                        removeEvent(eventModel, positionFinal);
 
                     }
                 });
@@ -214,7 +212,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
     /**
      * Remove from DB
      *
-     * @param position
+     * @param position in adapter
      */
     private void removeEvent(EventModel eventModel, final int position) {
 
@@ -231,12 +229,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.MyViewHolder
     /**
      * Update value in DB
      *
-     * @param eventModel
-     * @param position
-     * @param moved
+     * @param eventModel model to upload
+     * @param position in adapter
+     * @param moved True if we move event to new object
      */
     private void updateEventToDB(final EventModel eventModel, final int position, final boolean moved) {
-         if(moved){
+        if (moved) {
             // todo update any other references to this object
             eventModelList.remove(position);
             notifyItemRemoved(position);

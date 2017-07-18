@@ -17,9 +17,6 @@ public class Category {
         this.imageUri = imageUri;
     }
 
-    public Category(String title) {
-        this.title = title;
-    }
 
     public String getKey() {
         return key;

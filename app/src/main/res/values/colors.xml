@@ -9,6 +9,8 @@
     <color name="colorDivider">#fafafa</color>
     <color name="album_title">#4c4c4c</color>
     <color name="viewBg">#f1f5f8</color>
+    <color name="colorBlack50">#60000000</color>
+    <color name="colorGray">#acacac</color>
 
 
 </resources>

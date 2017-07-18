@@ -14,12 +14,11 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.example.android.kpgukraine.R;
 import com.example.android.kpgukraine.CategoryActivity;
+import com.example.android.kpgukraine.R;
 import com.example.android.kpgukraine.models.Category;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
@@ -29,19 +28,18 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     private List<Category> categoryList;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private FirebaseAuth auth = FirebaseAuth.getInstance();
     private boolean isAdmin;
 
     public void setIsAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView textTitle;
-        public RelativeLayout panelItem;
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView textTitle;
+        RelativeLayout panelItem;
 
 
-        public MyViewHolder(View view) {
+        MyViewHolder(View view) {
             super(view);
             textTitle = (TextView) view.findViewById(R.id.text_title);
             panelItem = (RelativeLayout) view.findViewById(R.id.panel_item);
@@ -58,15 +56,16 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     @Override
     public CategoryAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.category_card, parent, false);
+                .inflate(R.layout.card_category, parent, false);
 
         return new CategoryAdapter.MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(final CategoryAdapter.MyViewHolder holder, final int position) {
+    public void onBindViewHolder(final CategoryAdapter.MyViewHolder holder, int position) {
         final Category category = categoryList.get(position);
 
+        final int positionFinal = position;
         holder.textTitle.setText(category.title);
 
         holder.panelItem.setOnLongClickListener(new View.OnLongClickListener() {
@@ -95,7 +94,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
                         category.title = inputTitle1.getText().toString();
                         category.imageUri = inputUri.getText().toString();
 
-                        updateNewCategoryToDB(category, position);
+                        updateNewCategoryToDB(category, positionFinal);
 
                     }
                 });
@@ -110,7 +109,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
                 builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        removeCategory(category.key, position);
+                        removeCategory(category.key, positionFinal);
 
                     }
                 });
@@ -136,8 +135,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     /**
      * Remove from DB
      *
-     * @param key
-     * @param position
+     * @param key category unique key
+     * @param position Where is located
      */
     private void removeCategory(String key, final int position) {
 
@@ -153,8 +152,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     /**
      * Update value in DB
      *
-     * @param category
-     * @param position
+     * @param category Model that contains all values that we need to upload to db
+     * @param position where is in adapter
      */
     private void updateNewCategoryToDB(Category category, final int position) {
         database.getReference(Const.DB_REF_CATEGORIES).child(category.key)
@@ -170,7 +169,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     public int getItemCount() {
         return categoryList.size();
     }
-
 
 
 }

@@ -12,7 +12,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
@@ -26,7 +29,6 @@ import com.example.android.kpgukraine.models.SubCategory;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,31 +40,34 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHolder> {
+public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHolder> implements Filterable {
     private Context mContext;
     private List<ObjectModel> objectModelList;
+    private List<ObjectModel> objectModelListAll;
 
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private FirebaseAuth auth = FirebaseAuth.getInstance();
     private List<SubCategory> subCategoryList = new ArrayList<>();
     private boolean isAdmin;
     private FirebaseStorage storage = FirebaseStorage.getInstance();
-
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView textTitle, textAddress, textPhone;
-        public RelativeLayout panelItem;
-        public ImageView image;
+    private ObjectFilter objectFilter;
 
 
-        public MyViewHolder(View view) {
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView textTitle, textAddress, textPhone;
+        RelativeLayout panelItem;
+        ImageView imageView;
+        Button buttonCall;
+
+
+        MyViewHolder(View view) {
             super(view);
             panelItem = (RelativeLayout) view.findViewById(R.id.panel_item);
             textTitle = (TextView) view.findViewById(R.id.text_title);
             textAddress = (TextView) view.findViewById(R.id.text_address);
             textPhone = (TextView) view.findViewById(R.id.text_phone);
-            image = (ImageView) view.findViewById(R.id.image);
+            imageView = (ImageView) view.findViewById(R.id.image);
+            buttonCall = (Button) view.findViewById(R.id.button_call);
 
-            // todo add other fields
         }
 
 
@@ -71,6 +76,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     public ObjectAdapter(Context mContext, List<ObjectModel> objectModelList, boolean isAdmin) {
         this.mContext = mContext;
         this.objectModelList = objectModelList;
+        this.objectModelListAll = objectModelList;
         this.isAdmin = isAdmin;
 
         loadSubCategoriesFromDB();
@@ -79,47 +85,67 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     @Override
     public ObjectAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.object_card, parent, false);
+                .inflate(R.layout.card_object, parent, false);
 
         return new ObjectAdapter.MyViewHolder(itemView);
     }
 
-    @Override
-    public void onBindViewHolder(final ObjectAdapter.MyViewHolder holder, final int position) {
-        final ObjectModel objectModel = objectModelList.get(position);
 
-        if (objectModel.imageUri != null && !objectModel.imageUri.isEmpty()) {
-            if (objectModel.imageUri.contains("http")) {
-                // set image from URL provided by user
-                Glide.with(mContext).load(objectModel.imageUri).into(holder.image);
+
+    private void setImage(String imageUri, final ImageView targetImageView) {
+
+        if (imageUri != null && !imageUri.isEmpty()) {
+            if (imageUri.contains("http")) {
+                // set imageView from URL provided by user
+                Glide.with(mContext).load(imageUri).into(targetImageView);
 
             } else {
-                final StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(objectModel.imageUri);
+                final StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(imageUri);
 
-                // check if image is exist on Storage, otherwise load default image
+                // check if imageView is exist on Storage, otherwise load default imageView
                 ref.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
                     @Override
                     public void onComplete(@NonNull Task<Uri> task) {
                         if (task.isSuccessful()) {
-                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(targetImageView);
                         } else {
                             StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(Const.DEF_IMAGE);
-                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+                            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(targetImageView);
                         }
                     }
                 });
             }
 
         } else {
-            //set default image if user dn't enter any link
+            //set default imageView if user dn't enter any link
             StorageReference ref = storage.getReference(Const.STORE_OBJECT_IMAGES).child(Const.DEF_IMAGE);
-            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(holder.image);
+            Glide.with(mContext).using(new FirebaseImageLoader()).load(ref).into(targetImageView);
         }
+    }
+
+
+    @Override
+    public void onBindViewHolder(final ObjectAdapter.MyViewHolder holder, int position) {
+        final ObjectModel objectModel = objectModelList.get(position);
+
+        final int positionFinal = position;
+
+        setImage(objectModel.getImageUri(), holder.imageView);
+       //todo check this logic
 
 
         holder.textTitle.setText(objectModel.title);
         holder.textAddress.setText(objectModel.address);
         holder.textPhone.setText(objectModel.phone);
+
+        holder.buttonCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                callIntent.setData(Uri.parse("tel:" + getFirstNumber(objectModel.getPhone())));
+                mContext.startActivity(callIntent);
+            }
+        });
 
         holder.panelItem.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -155,7 +181,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
                     if (subCategoryList.get(i).getKey().equals(objectModel.subCategoryKey))
                         pos = i;
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(mContext,
                         android.R.layout.simple_spinner_item, arraySpinner);
 
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -209,7 +235,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
 
                         boolean moved = !oldCategoryKey.equals(objectModel.subCategoryKey);
 
-                        updateNewCategoryToDB(objectModel, position, moved);
+                        updateNewCategoryToDB(objectModel, positionFinal, moved);
 
                     }
                 });
@@ -224,7 +250,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
                 builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        removeObject(objectModel, position);
+                        removeObject(objectModel, positionFinal);
 
                     }
                 });
@@ -237,18 +263,37 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
         holder.panelItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO Load Object
                 Intent intent = new Intent(mContext, ObjectActivity.class);
                 intent.putExtra(Const.EXTRA_SUB_CAT_KEY, objectModel.getKey());
                 intent.putExtra(Const.EXTRA_SUB_CAT_TITLE, objectModel.getTitle());
                 intent.putExtra(Const.EXTRA_IS_ADMIN, isAdmin);
 
                 mContext.startActivity(intent);
-
-
             }
         });
 
+    }
+
+    /**
+     * Function to get first phone number in string variable
+     *
+     * @param phone phone number
+     * @return phone number
+     */
+    private String getFirstNumber(String phone) {
+
+        int firstComma = phone.indexOf(",");
+        int firstDot = phone.indexOf(".");
+
+        if (firstComma > 0 || firstDot > 0) {
+
+            if (firstComma > 0 && firstComma < firstDot)
+                return phone.substring(0, firstComma);
+            else
+                return phone.substring(0, firstDot);
+        }
+
+        return phone;
     }
 
     /**
@@ -296,16 +341,17 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     /**
      * Remove from DB
      *
-     * @param position
+     * @param position of element
      */
-    private void removeObject(ObjectModel objectModel, final int position) {
+    private void removeObject(ObjectModel objectModel, int position) {
 
+        final int pos = position;
         database.getReference(Const.DB_REF_OBJECTS)
                 .child(objectModel.key).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                objectModelList.remove(position);
-                notifyItemRemoved(position);
+                objectModelList.remove(pos);
+                notifyItemRemoved(pos);
             }
         });
     }
@@ -313,13 +359,13 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     /**
      * Update value in DB
      *
-     * @param objectModel
-     * @param position
-     * @param moved
+     * @param objectModel object that we need to upload to db
+     * @param position position in adapter
+     * @param moved if we have changed location
      */
-    private void updateNewCategoryToDB(final ObjectModel objectModel, final int position, final boolean moved) {
+    private void updateNewCategoryToDB(final ObjectModel objectModel, int position, final boolean moved) {
+        final int pos = position;
         if (moved) {
-            // todo update any other references to this object
             objectModelList.remove(position);
             notifyItemRemoved(position);
         }
@@ -330,7 +376,7 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (!moved)
-                    notifyItemChanged(position);
+                    notifyItemChanged(pos);
             }
         });
     }
@@ -341,4 +387,44 @@ public class ObjectAdapter extends RecyclerView.Adapter<ObjectAdapter.MyViewHold
     }
 
 
+    @Override
+    public Filter getFilter() {
+
+        if (objectFilter == null)
+            objectFilter = new ObjectFilter();
+        return objectFilter;
+    }
+
+    private class ObjectFilter extends Filter {
+
+        @Override
+        protected FilterResults performFiltering(CharSequence constraint) {
+            FilterResults filterResults = new FilterResults();
+            ArrayList<ObjectModel> tempList = new ArrayList<>();
+
+            if (constraint != null && constraint.length() > 0) {
+
+                // search content in friend list
+                for (ObjectModel objectModel : objectModelListAll) {
+                    if (objectModel.getTitle().toLowerCase().contains(constraint.toString().toLowerCase())) {
+                        tempList.add(objectModel);
+                    }
+                }
+
+            }
+            filterResults.count = tempList.size();
+            filterResults.values = tempList;
+
+
+            return filterResults;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            objectModelList = (ArrayList<ObjectModel>) results.values;
+            notifyDataSetChanged();
+        }
+
+    }
 }

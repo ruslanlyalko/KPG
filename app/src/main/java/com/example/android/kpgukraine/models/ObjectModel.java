@@ -5,7 +5,6 @@ public class ObjectModel {
 
     public String key;
     public String subCategoryKey;
-
     public String title;
     public String description;
     public String address;

@@ -1,9 +1,5 @@
 package com.example.android.kpgukraine.utils;
 
-/**
- * Created by Admin on 14.07.2017.
- */
-
 public final class Const {
 
     public static final String DB_REF_CATEGORIES = "CATEGORIES";
