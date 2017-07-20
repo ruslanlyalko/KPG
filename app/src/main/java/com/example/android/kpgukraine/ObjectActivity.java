@@ -63,6 +63,7 @@ public class ObjectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_object);
+        //initCollapsingToolbar();
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -73,9 +74,10 @@ public class ObjectActivity extends AppCompatActivity {
             isAdmin = bundle.getBoolean(Const.EXTRA_IS_ADMIN);
         }
 
-        setTitle(objectTitle);
+          setTitle(objectTitle);
 
         initRef();
+
 
         fab.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -93,6 +95,34 @@ public class ObjectActivity extends AppCompatActivity {
         loadObjectDetailsFromDB(objectKey);
         loadEventsFromDB();
     }
+/*
+    private void initCollapsingToolbar() {
+        final CollapsingToolbarLayout collapsingToolbar =
+                (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar1);
+        collapsingToolbar.setTitle(" ");
+        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.appbar1);
+        appBarLayout.setExpanded(true);
+
+        // hiding & showing the title when toolbar expanded & collapsed
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            boolean isShow = false;
+            int scrollRange = -1;
+
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.getTotalScrollRange();
+                }
+                if (scrollRange + verticalOffset == 0) {
+                    collapsingToolbar.setTitle(getString(R.string.title_activity_oject));
+                    isShow = true;
+                } else if (isShow) {
+                    collapsingToolbar.setTitle(" ");
+                    isShow = false;
+                }
+            }
+        });
+    }*/
 
     private void loadObjectDetailsFromDB(String objectKey) {
 

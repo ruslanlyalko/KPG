@@ -84,6 +84,9 @@
 
     <string name="action_call">ПОДЗВОНИТИ</string>
     <string name="text_show_on_map">Показати на карті</string>
+    <string name="backdrop_subtitle">SucbTItle</string>
+    <string name="backdrop_title">Titcle</string>
+    <string name="title_activity_oject">Obcject</string>
 
 
 </resources>
